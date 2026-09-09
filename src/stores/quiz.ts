@@ -192,11 +192,16 @@ export const useQuizStore = defineStore('quiz', () => {
         revealedIds.value.add(entry.id);
       }
     }
+    const isNewBest = saveIfBetter(currentHighscoreKey.value, {
+      outcome: 'gaveUp',
+      solvedCount: solvedIds.value.size,
+      total: total.value,
+    });
     result.value = {
       status: 'gaveUp',
       solvedCount: solvedIds.value.size,
       total: total.value,
-      isNewBest: false,
+      isNewBest,
     };
   }
 

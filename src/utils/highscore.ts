@@ -2,7 +2,7 @@ import type { Mode } from '../types';
 import type { Selection } from './generations';
 import { selectionKey } from './generations';
 
-export type Outcome = 'completed' | 'timedOut';
+export type Outcome = 'completed' | 'timedOut' | 'gaveUp';
 
 export interface HighscoreEntry {
   outcome: Outcome;
@@ -43,9 +43,11 @@ export function getHighscore(key: string): HighscoreEntry | undefined {
 
 export function isBetter(candidate: HighscoreEntry, current?: HighscoreEntry): boolean {
   if (!current) return true;
-  if (candidate.outcome === 'completed' && current.outcome === 'timedOut') return true;
-  if (candidate.outcome === 'timedOut' && current.outcome === 'completed') return false;
-  if (candidate.outcome === 'completed') return candidate.timeMs! < current.timeMs!;
+  const candidateDone = candidate.outcome === 'completed';
+  const currentDone = current.outcome === 'completed';
+  if (candidateDone && !currentDone) return true;
+  if (!candidateDone && currentDone) return false;
+  if (candidateDone) return candidate.timeMs! < current.timeMs!;
   return candidate.solvedCount! > current.solvedCount!;
 }
 
