@@ -1,20 +1,34 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useQuizStore } from '../stores/quiz';
 import type { Selection } from '../utils/generations';
 import type { Mode, DisplayMode, LayoutDirection } from '../types';
 import { highscoreKey, getHighscore } from '../utils/highscore';
+import { loadSettings, saveSettings } from '../utils/settings';
 import IconButton from './IconButton.vue';
 
 const store = useQuizStore();
 
-const mode = ref<Mode>('casual');
-const hardmode = ref(false);
-const displayMode = ref<DisplayMode>('both');
-const layoutDirection = ref<LayoutDirection>('row');
-const soundEnabled = ref(false);
-const hintsEnabled = ref(false);
-const fuzzyEnabled = ref(false);
+const saved = loadSettings();
+const mode = ref<Mode>(saved.mode);
+const hardmode = ref(saved.hardmode);
+const displayMode = ref<DisplayMode>(saved.displayMode);
+const layoutDirection = ref<LayoutDirection>(saved.layoutDirection);
+const soundEnabled = ref(saved.soundEnabled);
+const hintsEnabled = ref(saved.hintsEnabled);
+const fuzzyEnabled = ref(saved.fuzzyEnabled);
+
+watch([mode, hardmode, displayMode, layoutDirection, soundEnabled, hintsEnabled, fuzzyEnabled], () => {
+  saveSettings({
+    mode: mode.value,
+    hardmode: hardmode.value,
+    displayMode: displayMode.value,
+    layoutDirection: layoutDirection.value,
+    soundEnabled: soundEnabled.value,
+    hintsEnabled: hintsEnabled.value,
+    fuzzyEnabled: fuzzyEnabled.value,
+  });
+});
 
 const modes: { value: Mode; label: string }[] = [
   { value: 'casual', label: 'Casual' },
