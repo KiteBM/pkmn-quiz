@@ -16,6 +16,11 @@ const soundEnabled = ref(false);
 const hintsEnabled = ref(false);
 const fuzzyEnabled = ref(false);
 
+const modes: { value: Mode; label: string }[] = [
+  { value: 'casual', label: 'Casual' },
+  { value: 'timeTrial', label: 'Time Trial' },
+];
+
 const displayModes: { value: DisplayMode; label: string }[] = [
   { value: 'both', label: 'Bild + Name' },
   { value: 'name', label: 'Nur Name' },
@@ -71,59 +76,6 @@ function start(sel: Selection) {
   <div class="start">
     <h1>Pokémon Quiz</h1>
 
-    <div class="options">
-      <label class="switch">
-        <span :class="{ active: mode === 'casual' }">Casual</span>
-        <input
-          type="checkbox"
-          :checked="mode === 'timeTrial'"
-          @change="mode = ($event.target as HTMLInputElement).checked ? 'timeTrial' : 'casual'"
-        />
-        <span :class="{ active: mode === 'timeTrial' }">Time Trial</span>
-      </label>
-
-      <label class="checkbox-option">
-        <input type="checkbox" v-model="hardmode" />
-        Hardmode
-      </label>
-
-      <label class="checkbox-option">
-        <input type="checkbox" v-model="soundEnabled" />
-        Sound
-      </label>
-
-      <label class="checkbox-option">
-        <input type="checkbox" v-model="hintsEnabled" />
-        Hints
-      </label>
-
-      <label class="checkbox-option">
-        <input type="checkbox" v-model="fuzzyEnabled" />
-        Tippfehler
-      </label>
-    </div>
-
-    <div class="display-modes">
-      <button
-        v-for="dm in displayModes"
-        :key="dm.value"
-        type="button"
-        class="display-mode-button"
-        :class="{ active: displayMode === dm.value }"
-        @click="displayMode = dm.value"
-      >
-        {{ dm.label }}
-      </button>
-    </div>
-
-    <div class="layout-toggle">
-      <span>Reihenfolge:</span>
-      <IconButton
-        :label="layoutDirection === 'row' ? 'Links nach rechts (zu Oben nach unten wechseln)' : 'Oben nach unten (zu Links nach rechts wechseln)'"
-        @click="layoutDirection = layoutDirection === 'row' ? 'column' : 'row'"
-      >{{ layoutDirection === 'row' ? '→' : '↓' }}</IconButton>
-    </div>
-
     <div class="generations">
       <button
         v-for="g in selections"
@@ -135,6 +87,66 @@ function start(sel: Selection) {
         <span class="gen-label">{{ g.label }}</span>
         <span v-if="formatBest(g.sel)" class="gen-best">{{ formatBest(g.sel) }}</span>
       </button>
+    </div>
+
+    <div class="settings">
+      <h2>Einstellungen</h2>
+
+      <div class="segmented">
+        <button
+          v-for="m in modes"
+          :key="m.value"
+          type="button"
+          class="segmented-button"
+          :class="{ active: mode === m.value }"
+          @click="mode = m.value"
+        >
+          {{ m.label }}
+        </button>
+      </div>
+
+      <div class="options">
+        <label class="checkbox-option">
+          <input type="checkbox" v-model="hardmode" />
+          Hardmode
+        </label>
+
+        <label class="checkbox-option">
+          <input type="checkbox" v-model="soundEnabled" />
+          Sound
+        </label>
+
+        <label class="checkbox-option">
+          <input type="checkbox" v-model="hintsEnabled" />
+          Hints
+        </label>
+
+        <label class="checkbox-option">
+          <input type="checkbox" v-model="fuzzyEnabled" />
+          Tippfehler
+        </label>
+      </div>
+
+      <div class="segmented">
+        <button
+          v-for="dm in displayModes"
+          :key="dm.value"
+          type="button"
+          class="segmented-button"
+          :class="{ active: displayMode === dm.value }"
+          @click="displayMode = dm.value"
+        >
+          {{ dm.label }}
+        </button>
+      </div>
+
+      <div class="layout-toggle">
+        <span>Reihenfolge:</span>
+        <IconButton
+          :label="layoutDirection === 'row' ? 'Links nach rechts (zu Oben nach unten wechseln)' : 'Oben nach unten (zu Links nach rechts wechseln)'"
+          @click="layoutDirection = layoutDirection === 'row' ? 'column' : 'row'"
+        >{{ layoutDirection === 'row' ? '→' : '↓' }}</IconButton>
+      </div>
     </div>
   </div>
 </template>
@@ -153,6 +165,22 @@ h1 {
   text-align: center;
 }
 
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e6;
+}
+
+.settings h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  color: #666;
+  font-weight: 600;
+}
+
 .options {
   display: flex;
   justify-content: center;
@@ -161,34 +189,19 @@ h1 {
   flex-wrap: wrap;
 }
 
-.switch {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.switch span {
-  color: #999;
-}
-
-.switch span.active {
-  color: #1a1a1a;
-  font-weight: 600;
-}
-
 .checkbox-option {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.display-modes {
+.segmented {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
 }
 
-.display-mode-button {
+.segmented-button {
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
   border: 1px solid #d0d0d8;
@@ -198,7 +211,7 @@ h1 {
   color: #666;
 }
 
-.display-mode-button.active {
+.segmented-button.active {
   background: #1a1a1a;
   border-color: #1a1a1a;
   color: #fff;
