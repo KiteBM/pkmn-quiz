@@ -14,6 +14,7 @@ const displayMode = ref<DisplayMode>('both');
 const layoutDirection = ref<LayoutDirection>('row');
 const soundEnabled = ref(false);
 const hintsEnabled = ref(false);
+const fuzzyEnabled = ref(false);
 
 const displayModes: { value: DisplayMode; label: string }[] = [
   { value: 'both', label: 'Bild + Name' },
@@ -35,7 +36,7 @@ const generations: { sel: Selection; label: string }[] = [
 ];
 
 function bestFor(sel: Selection) {
-  return getHighscore(highscoreKey(sel, mode.value, hardmode.value));
+  return getHighscore(highscoreKey(sel, mode.value, hardmode.value, fuzzyEnabled.value));
 }
 
 function formatBest(sel: Selection): string | null {
@@ -60,7 +61,8 @@ function start(sel: Selection) {
     displayMode.value,
     layoutDirection.value,
     soundEnabled.value,
-    hintsEnabled.value
+    hintsEnabled.value,
+    fuzzyEnabled.value
   );
 }
 </script>
@@ -93,6 +95,11 @@ function start(sel: Selection) {
       <label class="checkbox-option">
         <input type="checkbox" v-model="hintsEnabled" />
         Hints
+      </label>
+
+      <label class="checkbox-option">
+        <input type="checkbox" v-model="fuzzyEnabled" />
+        Tippfehler
       </label>
     </div>
 

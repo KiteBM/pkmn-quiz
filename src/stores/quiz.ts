@@ -4,6 +4,7 @@ import { POKEDEX, type PokedexEntry } from '../data/pokedex';
 import { GENERATION_RANGES, type Selection } from '../utils/generations';
 import { normalizeName } from '../utils/normalize';
 import { highscoreKey, saveIfBetter, getHighscore } from '../utils/highscore';
+import { isFuzzyMatch, fuzzyDistance } from '../utils/fuzzyMatch';
 import { playCry } from '../utils/sound';
 import type { Mode, Screen, QuizResult, DisplayMode, LayoutDirection } from '../types';
 
@@ -32,6 +33,7 @@ export const useQuizStore = defineStore('quiz', () => {
   const layoutDirection = ref<LayoutDirection>('row');
   const soundEnabled = ref(false);
   const hintsEnabled = ref(false);
+  const fuzzyEnabled = ref(false);
 
   const entries = ref<PokedexEntry[]>([]);
   const solvedIds = ref<Set<number>>(new Set());
@@ -56,7 +58,9 @@ export const useQuizStore = defineStore('quiz', () => {
 
   const total = computed(() => entries.value.length);
   const solvedCount = computed(() => solvedIds.value.size);
-  const currentHighscoreKey = computed(() => highscoreKey(selection.value, mode.value, hardmode.value));
+  const currentHighscoreKey = computed(() =>
+    highscoreKey(selection.value, mode.value, hardmode.value, fuzzyEnabled.value)
+  );
   const currentHighscore = computed(() => getHighscore(currentHighscoreKey.value));
 
   function buildLookup(list: PokedexEntry[]) {
@@ -75,7 +79,8 @@ export const useQuizStore = defineStore('quiz', () => {
     disp: DisplayMode,
     dir: LayoutDirection,
     sound: boolean,
-    hints: boolean
+    hints: boolean,
+    fuzzy: boolean
   ) {
     selection.value = sel;
     mode.value = m;
@@ -84,6 +89,7 @@ export const useQuizStore = defineStore('quiz', () => {
     layoutDirection.value = dir;
     soundEnabled.value = sound;
     hintsEnabled.value = hints;
+    fuzzyEnabled.value = fuzzy;
 
     const list = getEntriesForSelection(sel);
     entries.value = list;
@@ -126,18 +132,41 @@ export const useQuizStore = defineStore('quiz', () => {
       const target = entries.value[nextExpectedIndex.value];
       if (!target) return;
       const targetNorms = [normalizeName(target.nameEn), normalizeName(target.nameDe)];
-      if (targetNorms.includes(norm)) {
+      const matched =
+        targetNorms.includes(norm) ||
+        (fuzzyEnabled.value && targetNorms.some((t) => isFuzzyMatch(norm, t)));
+      if (matched) {
         solve(target.id);
         nextExpectedIndex.value += 1;
         input.value = '';
       }
     } else {
-      const id = lookup.get(norm);
+      let id = lookup.get(norm);
+      if (id === undefined && fuzzyEnabled.value) {
+        id = findFuzzyMatchId(norm);
+      }
       if (id !== undefined && !solvedIds.value.has(id)) {
         solve(id);
         input.value = '';
       }
     }
+  }
+
+  function findFuzzyMatchId(norm: string): number | undefined {
+    let bestId: number | undefined;
+    let bestDist = Infinity;
+    for (const entry of entries.value) {
+      if (solvedIds.value.has(entry.id)) continue;
+      for (const name of [normalizeName(entry.nameEn), normalizeName(entry.nameDe)]) {
+        if (!isFuzzyMatch(norm, name)) continue;
+        const dist = fuzzyDistance(norm, name);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestId = entry.id;
+        }
+      }
+    }
+    return bestId;
   }
 
   function checkCompletion() {
@@ -233,6 +262,7 @@ export const useQuizStore = defineStore('quiz', () => {
     layoutDirection,
     soundEnabled,
     hintsEnabled,
+    fuzzyEnabled,
     entries,
     solvedIds,
     revealedIds,

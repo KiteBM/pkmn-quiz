@@ -16,8 +16,13 @@ export type HighscoreMap = Record<string, HighscoreEntry>;
 
 const STORAGE_KEY = 'pokequiz:highscores';
 
-export function highscoreKey(selection: Selection, mode: Mode, hardmode: boolean): string {
-  return `${selectionKey(selection)}:${mode}:${hardmode ? 'hard' : 'normal'}`;
+export function highscoreKey(
+  selection: Selection,
+  mode: Mode,
+  hardmode: boolean,
+  fuzzy: boolean
+): string {
+  return `${selectionKey(selection)}:${mode}:${hardmode ? 'hard' : 'normal'}:${fuzzy ? 'fuzzy' : 'exact'}`;
 }
 
 function loadAll(): HighscoreMap {
