@@ -25,10 +25,30 @@ export function highscoreKey(
   return `${selectionKey(selection)}:${mode}:${hardmode ? 'hard' : 'normal'}:${fuzzy ? 'fuzzy' : 'exact'}`;
 }
 
+function migrateKey(key: string): string {
+  // Pre-fuzzy-mode keys had only 3 segments (selection:mode:hardmode); they were
+  // all "exact" matching since fuzzy mode didn't exist yet.
+  return key.split(':').length === 3 ? `${key}:exact` : key;
+}
+
 function loadAll(): HighscoreMap {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as HighscoreMap) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as HighscoreMap;
+
+    let didMigrate = false;
+    const migrated: HighscoreMap = {};
+    for (const [key, entry] of Object.entries(parsed)) {
+      const newKey = migrateKey(key);
+      if (newKey !== key) didMigrate = true;
+      if (isBetter(entry, migrated[newKey])) {
+        migrated[newKey] = entry;
+      }
+    }
+
+    if (didMigrate) saveAll(migrated);
+    return migrated;
   } catch {
     return {};
   }
